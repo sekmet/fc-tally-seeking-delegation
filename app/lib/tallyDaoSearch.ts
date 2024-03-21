@@ -1,5 +1,5 @@
 import { daoSearch } from "./daoSearch";
-import { trimLeftPlus } from "./parseInput";
+import { trimLeftPlus, trimLeft } from "./parseInput";
 
 export async function fetchDaoResults(searchInput: string) {
   if (searchInput === null || searchInput === "" || searchInput === undefined) {
@@ -7,7 +7,7 @@ export async function fetchDaoResults(searchInput: string) {
   }
 
   const daoResult = await daoSearch(
-    String(trimLeftPlus(searchInput).split("+").join(" ")),
+    String(trimLeft(trimLeftPlus(searchInput).split("+").join(" "))),
   );
 
   return daoResult ?? [];
