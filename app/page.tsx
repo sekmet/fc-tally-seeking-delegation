@@ -56,6 +56,7 @@ const reducer: FrameReducer<State> = (state, action) => {
               : "1",
           }
         : state;
+      break;
     case "daofound":
       switch (buttonIndex) {
         case 1:
@@ -70,6 +71,7 @@ const reducer: FrameReducer<State> = (state, action) => {
                   : "1",
               }
             : state;
+          break;
         case 2:
           return buttonIndex === 2
             ? {
@@ -80,6 +82,7 @@ const reducer: FrameReducer<State> = (state, action) => {
                   : "2",
               }
             : state;
+          break;
       }
     case "listdelegates":
       switch (buttonIndex) {
@@ -93,6 +96,7 @@ const reducer: FrameReducer<State> = (state, action) => {
                   : "1",
               }
             : state;
+          break;
         case 2:
           // reset session kv
           resetCursor(String(action.postBody?.untrustedData.fid));
@@ -105,6 +109,7 @@ const reducer: FrameReducer<State> = (state, action) => {
                   : "2",
               }
             : state;
+          break;
         case 3:
           // reset session kv
           resetCursor(String(action.postBody?.untrustedData.fid));
@@ -117,11 +122,13 @@ const reducer: FrameReducer<State> = (state, action) => {
                   : "3",
               }
             : state;
+          break;
       }
     case "notfound":
       return buttonIndex === 1
         ? { page: "notfound", active: "1", total_button_presses: 0 }
         : state;
+      break;
     default:
       return { page: "initial", active: "1", total_button_presses: 0 };
   }
@@ -295,7 +302,7 @@ export default async function Home({ searchParams }: NextServerPageProps) {
         </div>
       </FrameImage>
       <FrameInput text="What's the DAO name?" />
-      <FrameButton key="search-button">🔍 Search</FrameButton>
+      <FrameButton key="search-button">🔍 Search DAO</FrameButton>
     </FrameContainer>
   );
 
@@ -496,20 +503,6 @@ export default async function Home({ searchParams }: NextServerPageProps) {
     default:
       return (frame = initialPage);
   }
-
-  /*if state?.page === "initial" ? initialPage : null}
-  {state?.page === "daofound" && !isObjectEmpty(orgFound)
-    ? daoFoundPage
-    : null}
-  {state?.page === "daofound" && isObjectEmpty(orgFound)
-    ? notfoundPage
-    : null}
-  {state?.page === "listdelegates" && searchResult?.firstCursor
-    ? resultPageProfile
-    : null}
-  {state?.page === "listdelegates" && !searchResult?.firstCursor
-    ? notfoundPage
-    : null}*/
 
   // then, when done, return next frame
   return (

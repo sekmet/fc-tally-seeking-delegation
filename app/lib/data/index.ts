@@ -2,7 +2,6 @@ import { get, reset, set } from "./session";
 
 const getCursor = async (fid: string) => {
   const cursor = await get(fid, "cursor", "fc-tally-sd-010");
-  console.log("getCursor ", cursor);
   return cursor;
 };
 
@@ -12,7 +11,6 @@ const setCursor = async (fid: string, cursor: string) => {
 
 const getOrganizationId = async (fid: string) => {
   const organizationId = await get(fid, "organizationId", "fc-tally-sd-010");
-  console.log("getOrganizationId ", organizationId);
   return organizationId;
 };
 
@@ -22,7 +20,6 @@ const setOrganizationId = async (fid: string, organizationId: string) => {
 
 const getDaoId = async (fid: string) => {
   const daoId = await get(fid, "daoId", "fc-tally-sd-010");
-  console.log("getDaoId ", daoId);
   return daoId;
 };
 
@@ -32,7 +29,6 @@ const setDaoId = async (fid: string, daoId: string) => {
 
 const getGovernorId = async (fid: string) => {
   const governorId = await get(fid, "governorId", "fc-tally-sd-010");
-  console.log("getGovernorId ", governorId);
   return governorId;
 };
 
@@ -42,7 +38,6 @@ const setGovernorId = async (fid: string, governorId: string) => {
 
 const getDaoSlug = async (fid: string) => {
   const daoSlug = await get(fid, "daoSlug", "fc-tally-sd-010");
-  console.log("daoSlug ", daoSlug);
   return daoSlug;
 };
 
