@@ -1,4 +1,4 @@
-import { get, reset, set } from "./session";
+import { get, reset, resetkey, set } from "./session";
 
 const getCursor = async (fid: string) => {
   const cursor = await get(fid, "cursor", "fc-tally-sd-010");
@@ -46,6 +46,10 @@ const setDaoSlug = async (fid: string, daoSlug: string) => {
 };
 
 const resetCursor = async (fid: string) => {
+  await resetkey(fid, "fc-tally-sd-010", "cursor");
+};
+
+const resetData = async (fid: string) => {
   await reset(fid, "fc-tally-sd-010");
 };
 
@@ -56,6 +60,7 @@ export {
   getGovernorId,
   getOrganizationId,
   resetCursor,
+  resetData,
   setCursor,
   setDaoId,
   setDaoSlug,

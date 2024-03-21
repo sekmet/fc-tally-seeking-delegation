@@ -1,6 +1,6 @@
 {
   "name": "fc-tally-seek-delegation",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "scripts": {
     "dev": "node ./scripts/dev-script.js",
@@ -25,7 +25,7 @@
     "@xmtp/frames-validator": "^0.5.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
-    "frames.js": "^0.8.4",
+    "frames.js": "^0.8.5",
     "graphql": "^16.8.1",
     "groq-sdk": "^0.3.1",
     "js-cookie": "^3.0.5",
@@ -41,7 +41,7 @@
     "node": ">=18.17.0"
   },
   "devDependencies": {
-    "@frames.js/debugger": "^0.1.6",
+    "@frames.js/debugger": "^0.1.7",
     "@tailwindcss/typography": "^0.5.10",
     "@types/node": "^18.17.0",
     "@types/react": "^18.2.0",

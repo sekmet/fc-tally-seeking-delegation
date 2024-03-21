@@ -5,7 +5,10 @@ export async function fetchSearchResults(fid: string) {
   if (fid === null || fid === "" || fid === undefined) {
     return [];
   }
-  const cursor = await getCursor(fid);
+  let cursor = await getCursor(fid);
+  if (cursor === "" || cursor === "undefined") {
+    cursor = null;
+  }
   // default dao (arbitrum) if dao slug or chainId not defined
   const daoId = (await getDaoId(fid)) ?? "eip155:42161";
   const governorIds =

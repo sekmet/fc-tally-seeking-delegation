@@ -29,6 +29,14 @@ export async function set(
   return await kv.hset(`session-${namespace}-${fid}`, { [key]: value });
 }
 
+export async function resetkey(
+  fid: string,
+  key: string,
+  namespace: string = "",
+) {
+  return await kv.hdel(`session-${namespace}-${fid}`, key);
+}
+
 export async function reset(fid: string, namespace: string = "") {
   return await kv.del(`session-${namespace}-${fid}`);
 }

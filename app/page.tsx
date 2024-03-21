@@ -13,7 +13,7 @@ import Link from "next/link";
 import { createDebugUrl, DEFAULT_DEBUGGER_HUB_URL } from "./debug";
 import {
   getDaoSlug,
-  resetCursor,
+  resetData,
   setCursor,
   setDaoId,
   setDaoSlug,
@@ -61,7 +61,7 @@ const reducer: FrameReducer<State> = (state, action) => {
       switch (buttonIndex) {
         case 1:
           // reset session kv
-          resetCursor(String(action.postBody?.untrustedData.fid));
+          resetData(String(action.postBody?.untrustedData.fid));
           return buttonIndex === 1
             ? {
                 page: "initial",
@@ -87,9 +87,11 @@ const reducer: FrameReducer<State> = (state, action) => {
     case "listdelegates":
       switch (buttonIndex) {
         case 1:
+          // reset session kv
+          resetData(String(action.postBody?.untrustedData.fid));
           return buttonIndex === 1
             ? {
-                page: "listdelegates",
+                page: "initial",
                 total_button_presses: state.total_button_presses + 1,
                 active: action.postBody?.untrustedData.buttonIndex
                   ? String(action.postBody?.untrustedData.buttonIndex)
@@ -99,7 +101,7 @@ const reducer: FrameReducer<State> = (state, action) => {
           break;
         case 2:
           // reset session kv
-          resetCursor(String(action.postBody?.untrustedData.fid));
+          resetData(String(action.postBody?.untrustedData.fid));
           return buttonIndex === 2
             ? {
                 page: "initial",
@@ -111,11 +113,9 @@ const reducer: FrameReducer<State> = (state, action) => {
             : state;
           break;
         case 3:
-          // reset session kv
-          resetCursor(String(action.postBody?.untrustedData.fid));
           return buttonIndex === 3
             ? {
-                page: "initial",
+                page: "listdelegates",
                 total_button_presses: state.total_button_presses + 1,
                 active: action.postBody?.untrustedData.buttonIndex
                   ? String(action.postBody?.untrustedData.buttonIndex)
@@ -126,7 +126,24 @@ const reducer: FrameReducer<State> = (state, action) => {
       }
     case "notfound":
       return buttonIndex === 1
-        ? { page: "notfound", active: "1", total_button_presses: 0 }
+        ? {
+            page: "initial",
+            total_button_presses: state.total_button_presses + 1,
+            active: action.postBody?.untrustedData.buttonIndex
+              ? String(action.postBody?.untrustedData.buttonIndex)
+              : "1",
+          }
+        : state;
+      break;
+    case "nonedelegates":
+      return buttonIndex === 1
+        ? {
+            page: "initial",
+            total_button_presses: state.total_button_presses + 1,
+            active: action.postBody?.untrustedData.buttonIndex
+              ? String(action.postBody?.untrustedData.buttonIndex)
+              : "1",
+          }
         : state;
       break;
     default:
@@ -166,57 +183,56 @@ export default async function Home({ searchParams }: NextServerPageProps) {
     state: any,
     previousFrame: any,
   ): Promise<TallyOrgType> {
-    const result =
-      state?.page === "daofound"
-        ? await fetchDaoResults(
-            String(previousFrame.postBody?.untrustedData.inputText),
-          )
-        : {
-            // Default values for TallyOrgType
-          };
-
-    if (isTallyOrgType(result)) {
-      var governanceInfo_0 = result.governanceInfo[0] ?? {};
-
-      setDaoSlug(
-        String(previousFrame.postBody?.untrustedData.fid),
-        result.slug,
-      );
-      setOrganizationId(
-        String(previousFrame.postBody?.untrustedData.fid),
-        result.id,
+    if (state?.page === "daofound") {
+      const result = await fetchDaoResults(
+        String(previousFrame.postBody?.untrustedData.inputText),
       );
 
-      setDaoId(
-        String(previousFrame.postBody?.untrustedData.fid),
-        String(governanceInfo_0.daoId),
-      );
-      //--
+      if (isTallyOrgType(result)) {
+        var governanceInfo_0 = result.governanceInfo[0] ?? {};
 
-      if (
-        previousFrame.postBody?.untrustedData.fid &&
-        result.governanceInfo?.length
-      ) {
-        var govIds: string[] = [];
-        previousFrame.postBody?.untrustedData.fid,
-          result.governanceInfo?.map((govId) => {
-            govIds.push(String(govId.governorId));
-          });
-        setGovernorId(
+        setDaoSlug(
           String(previousFrame.postBody?.untrustedData.fid),
-          govIds.join("|"),
+          result.slug,
         );
+        setOrganizationId(
+          String(previousFrame.postBody?.untrustedData.fid),
+          result.id,
+        );
+
+        setDaoId(
+          String(previousFrame.postBody?.untrustedData.fid),
+          String(governanceInfo_0.daoId),
+        );
+        //--
+
+        if (
+          previousFrame.postBody?.untrustedData.fid &&
+          result.governanceInfo?.length
+        ) {
+          var govIds: string[] = [];
+          previousFrame.postBody?.untrustedData.fid,
+            result.governanceInfo?.map((govId) => {
+              govIds.push(String(govId.governorId));
+            });
+          setGovernorId(
+            String(previousFrame.postBody?.untrustedData.fid),
+            govIds.join("|"),
+          );
+        } else {
+          setGovernorId(
+            String(previousFrame.postBody?.untrustedData.fid),
+            String(governanceInfo_0.governorId),
+          );
+        }
+
+        return result;
       } else {
-        setGovernorId(
-          String(previousFrame.postBody?.untrustedData.fid),
-          String(governanceInfo_0.governorId),
-        );
+        //throw new Error("Result is not of type TallyOrgType");
+        console.log("Result is not of type TallyOrgType");
+        return {} as TallyOrgType;
       }
-
-      return result;
     } else {
-      //throw new Error("Result is not of type TallyOrgType");
-      console.log("Result is not of type TallyOrgType");
       return {} as TallyOrgType;
     }
   }
@@ -236,34 +252,31 @@ export default async function Home({ searchParams }: NextServerPageProps) {
     state: any,
     previousFrame: any,
   ): Promise<SearchResultType> {
-    const result =
-      state?.page === "listdelegates"
-        ? await fetchSearchResults(
-            String(previousFrame.postBody?.untrustedData.fid),
-          )
-        : {
-            // Default values for SearchResultType
-          };
-
-    if (isSearchResultType(result)) {
-      await setCursor(
-        previousFrame.postBody?.untrustedData.fid,
-        String(result.firstCursor),
+    if (state?.page === "listdelegates") {
+      const result = await fetchSearchResults(
+        String(previousFrame.postBody?.untrustedData.fid),
       );
-      return result;
+
+      if (isSearchResultType(result)) {
+        await setCursor(
+          previousFrame.postBody?.untrustedData.fid,
+          String(result.firstCursor),
+        );
+        return result;
+      } else {
+        //throw new Error("Result is not of type SearchResultType");
+        console.log("Result is not of type SearchResultType");
+        return {} as SearchResultType;
+      }
     } else {
-      //throw new Error("Result is not of type SearchResultType");
-      console.log("Result is not of type SearchResultType");
       return {} as SearchResultType;
     }
   }
 
-  const searchResult: SearchResultType =
-    state?.page === "listdelegates"
-      ? await getSearchResult(state, previousFrame)
-      : {
-          // Default values for SearchResultType
-        };
+  const searchResult: SearchResultType = await getSearchResult(
+    state,
+    previousFrame,
+  );
 
   const initialPage = (
     <FrameContainer
@@ -333,9 +346,7 @@ export default async function Home({ searchParams }: NextServerPageProps) {
           </div>
         </div>
       </FrameImage>
-      <FrameButton key="tryagain-button" target={"/frames?reset=true"}>
-        Try again
-      </FrameButton>
+      <FrameButton key="tryagain-button">Try again</FrameButton>
     </FrameContainer>
   );
 
@@ -394,14 +405,39 @@ export default async function Home({ searchParams }: NextServerPageProps) {
           </div>
         </div>
       </FrameImage>
+      <FrameButton key="searchagain-button">🔍 Search again</FrameButton>
+      <FrameButton key="browse-button">🧭 Browse Delegates</FrameButton>
+    </FrameContainer>
+  );
 
-      {state?.page === "daofound" && !isObjectEmpty(orgFound) ? (
-        <FrameButton key="searchagain-button">🔍 Search again</FrameButton>
-      ) : null}
-
-      {state?.page === "daofound" && !isObjectEmpty(orgFound) ? (
-        <FrameButton key="browse-button">🧭 Browse Delegates</FrameButton>
-      ) : null}
+  const noneDelegatesPage = (
+    <FrameContainer
+      postUrl="/frames"
+      pathname="/"
+      state={state}
+      previousFrame={previousFrame}
+    >
+      <FrameImage key="delegate-notfound" aspectRatio="1.91:1">
+        <div
+          tw="flex w-full h-full"
+          style={{
+            backgroundImage: "linear-gradient(to bottom, #1d173f, #725bff)",
+          }}
+        >
+          <div tw="flex flex-col w-full h-full items-center justify-center">
+            <h2 tw="flex flex-col text-[164px] font-bold tracking-tight text-white">
+              <span tw="items-center justify-center pb-6">None!</span>
+              <span tw="text-red-300 text-5xl text-center max-w-[40rem] pb-3">
+                Sorry! None delegate found seeking delegation in this DAO...
+              </span>
+              <span tw="items-center justify-center text-5xl text-indigo-100">
+                Check another DAO or try again later!
+              </span>
+            </h2>
+          </div>
+        </div>
+      </FrameImage>
+      <FrameButton key="searchagain-button">🔍 Search again</FrameButton>
     </FrameContainer>
   );
 
@@ -462,11 +498,7 @@ export default async function Home({ searchParams }: NextServerPageProps) {
         </div>
       </FrameImage>
 
-      {state?.page === "listdelegates" && searchResult?.lastCursor ? (
-        <FrameButton key="next-button">Next →</FrameButton>
-      ) : null}
-
-      {state?.page === "listdelegates" && searchResult?.firstCursor ? (
+      {searchResult?.firstCursor ? (
         <FrameButton
           key="delegate-button"
           action="link"
@@ -475,33 +507,58 @@ export default async function Home({ searchParams }: NextServerPageProps) {
           Delegate
         </FrameButton>
       ) : null}
-
       <FrameButton key="reset-button">🔴 Reset</FrameButton>
+      {searchResult?.lastCursor ? (
+        <FrameButton key="next-button">Next →</FrameButton>
+      ) : null}
     </FrameContainer>
   );
 
-  switch (state.page) {
-    case "initial":
-      return (frame = initialPage);
-    case "daofound":
-      frame = !isObjectEmpty(orgFound) ? daoFoundPage : notfoundPage;
-      return frame;
-    case "listdelegates":
-      // if retry is true, then try to generate again and show checkStatusFrame
-      if (searchParams?.reset === "true") {
-        // reset to initial state
-        resetCursor(String(previousFrame.postBody?.untrustedData.fid));
-        frame = initialPage;
+  /*async function switchPage(page: string){
+    switch (page) {
+      case "initial":
+        return (frame = initialPage);
+      case "daofound":
+        frame = !isObjectEmpty(orgFound) ? daoFoundPage : notfoundPage;
         return frame;
-      } else {
-        frame = searchResult?.firstCursor ? resultPageProfile : notfoundPage;
+      case "listdelegates":
+        // if retry is true, then try to generate again and show checkStatusFrame
+        if (searchParams?.reset === "true") {
+          // reset to initial state
+          await resetCursor(String(previousFrame.postBody?.untrustedData.fid));
+          frame = initialPage;
+          return frame;
+        } else {          
+          if (searchResult?.firstCursor) {
+            frame = resultPageProfile
+          } else {
+            await resetCursor(String(previousFrame.postBody?.untrustedData.fid));
+            frame = notfoundPage;
+          }
+          return frame;
+        }
+      case "notfound":
+        frame = notfoundPage;
         return frame;
-      }
-    case "notfound":
-      frame = notfoundPage;
-      return frame;
-    default:
-      return (frame = initialPage);
+      default:
+        return (frame = initialPage);
+    }
+  }
+  switchPage(state.page);*/
+
+  console.log(
+    "isSearchResultType(searchResult) ",
+    searchResult,
+    isSearchResultType(searchResult),
+  );
+  console.log("orgFound ", orgFound, isTallyOrgType(orgFound));
+
+  if (state.page === "daofound" && isTallyOrgType(orgFound) === false) {
+    return <div className="p-4">{notfoundPage}</div>;
+  }
+
+  if (state.page === "listdelegates" && searchResult?.id === undefined) {
+    return <div className="p-4">{noneDelegatesPage}</div>;
   }
 
   // then, when done, return next frame
@@ -512,7 +569,15 @@ export default async function Home({ searchParams }: NextServerPageProps) {
       <Link href={createDebugUrl(url)} className="underline">
         Debug
       </Link>
-      {frame}
+      {state?.page === "initial" ? initialPage : null}
+      {state?.page === "notfound" ? notfoundPage : null}
+      {state?.page === "nonedelegates" ? noneDelegatesPage : null}
+      {state?.page === "daofound" && !isObjectEmpty(orgFound)
+        ? daoFoundPage
+        : null}
+      {state?.page === "listdelegates" && searchResult?.firstCursor
+        ? resultPageProfile
+        : null}
     </div>
   );
 }
